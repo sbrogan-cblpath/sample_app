@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_filter(:authenticate, { :only => [:index, :edit, :update, :destroy] } )
+  before_filter(:authenticate, { :except => [:show, :new, :create] } )
   before_filter(:correct_user, { :only => [:edit, :update] } )
   before_filter(:admin_user, { :only => :destroy } )
   
@@ -8,21 +8,16 @@ class UsersController < ApplicationController
 	@users = User.paginate(:page => params[:page])
   end
   
-  def show()
-    @user = User.find(params[:id])
-	@title = @user.name()
-  end
-  
   def new()
     #Added signedin_user()
-	signedin_user()
+	#signedin_user()
 	@user = User.new()
     @title = "Sign up"
   end
 
   def create()
     #Added signedin_user()
-    signedin_user()
+    #signedin_user()
     @user = User.new(params[:user])
 	if(@user.save)
 	  sign_in(@user)
@@ -61,16 +56,32 @@ class UsersController < ApplicationController
 	redirect_to(users_path)
   end
   
-  private
+  def following()
+    @title = "Following"
+	@user = User.find(params[:id])
+	@users = @user.following.paginate(:page => params[:page])
+	render 'show_follow'
+  end
   
-    def authenticate()
-	  deny_access unless signed_in?
-	end
+  def followers()
+    @title = "Followers"
+	@user = User.find(params[:id])
+	@users = @user.followers.paginate(:page => params[:page])
+	render 'show_follow'
+  end
+  
+  def show()
+    @user = User.find(params[:id])
+	@microposts = @user.microposts.paginate(:page => params[:page])
+	@title = @user.name()
+  end
+  
+  private
 	
 	#Wrote signedin_user()
-	def signedin_user()
-		redirect_to(root_path) unless signed_in? == false
-	end
+	#def signedin_user()
+	#	redirect_to(root_path) unless signed_in? == false
+	#end
 	
 	def correct_user()
 	  @user = User.find(params[:id])
